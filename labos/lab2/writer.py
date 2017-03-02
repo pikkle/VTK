@@ -31,6 +31,13 @@ triangles = [(0, 2, 4),
              (7, 5, 6),
              (5, 4, 6)]
 
+def writeFile(filename, polydata):
+    writer = vtk.vtkPolyDataWriter()
+    writer.SetFileName(filename)
+    writer.SetInputData(polydata)
+    writer.Write()
+
+# Use squares
 cube = vtk.vtkPolyData()
 points = vtk.vtkPoints()
 polys = vtk.vtkCellArray()
@@ -49,12 +56,9 @@ cube.SetPoints(points)
 cube.SetPolys(polys)
 cube.GetPointData().SetScalars(scalars)
 
-writer = vtk.vtkPolyDataWriter()
-writer.SetFileName('data/cubeSquares.vtk')
-writer.SetInputData(cube)
-writer.Write()
+writeFile('data/cubeSquares.vtk', cube)
 
-# Use triangles instead of squares
+# Use triangles
 polys = vtk.vtkCellArray()
 
 for face in triangles:
@@ -62,7 +66,33 @@ for face in triangles:
 
 cube.SetPolys(polys)
 
-writer = vtk.vtkPolyDataWriter()
-writer.SetFileName('data/cubeTriangles.vtk')
-writer.SetInputData(cube)
-writer.Write()
+writeFile('data/cubeTriangles.vtk', cube)
+
+# Using two triangle strips
+strip = vtk.vtkCellArray()
+strip.InsertNextCell(8)
+strip.InsertCellPoint(0)
+strip.InsertCellPoint(1)
+strip.InsertCellPoint(2)
+strip.InsertCellPoint(3)
+strip.InsertCellPoint(6)
+strip.InsertCellPoint(7)
+strip.InsertCellPoint(4)
+strip.InsertCellPoint(5)
+
+strip.InsertNextCell(8)
+strip.InsertCellPoint(2)
+strip.InsertCellPoint(6)
+strip.InsertCellPoint(0)
+strip.InsertCellPoint(4)
+strip.InsertCellPoint(1)
+strip.InsertCellPoint(5)
+strip.InsertCellPoint(3)
+strip.InsertCellPoint(7)
+
+cube = vtk.vtkPolyData()
+cube.SetPoints(points)
+cube.SetStrips(strip)
+cube.GetPointData().SetScalars(scalars)
+
+writeFile('data/cubeStrip.vtk', cube)

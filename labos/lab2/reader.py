@@ -12,7 +12,7 @@ reader.SetFileName(sys.argv[1])
 
 mapper = vtk.vtkPolyDataMapper()
 mapper.SetInputConnection(reader.GetOutputPort())
-mapper.SetScalarRange(0, 8)
+mapper.SetScalarRange(0, 7)
 
 actor = vtk.vtkActor()
 actor.SetMapper(mapper)
