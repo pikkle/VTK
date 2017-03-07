@@ -91,3 +91,4 @@ ENV/
 # Custom settings
 /annexes
 /slides
+/.idea

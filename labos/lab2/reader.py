@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 
-import vtk
+import vtk, sys
 
-import sys
-
-if (len(sys.argv) != 2):
+if len(sys.argv) != 2:
     sys.exit("Need one argument: vtk data file as parameter")
 
 reader = vtk.vtkPolyDataReader()
