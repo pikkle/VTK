@@ -7,29 +7,36 @@ reader.SetFileName("data/ts14_painted.slc")
 DELTA = 0.001
 
 
-def isolate_organ(scalar_from, scalar_to, color, opacity=1.0):
-    """
-    Creates a volume visible only within the bounds. 
-    The parameter opacity sets the opacity ratio for the visible part.
-    
-    :param scalar_from: starting scalar bound
-    :param scalar_to: ending scalar bound
-    :param color: the color of the volume (r,g,b)
-    :param opacity: the max opacity
-    :return: 
-    """
-    r, g, b = color
-    opacity_func = vtk.vtkPiecewiseFunction()
-    opacity_func.AddPoint(0, 0.0)
-    opacity_func.AddPoint(scalar_from - DELTA, 0.0)
-    opacity_func.AddPoint(scalar_from, opacity)
-    opacity_func.AddPoint(scalar_to, opacity)
-    opacity_func.AddPoint(scalar_to + DELTA, 0.0)
-    opacity_func.AddPoint(255, 0.0)
+class Region:
+    def __init__(self, scalar_from, scalar_to, color, opacity):
+        self.scalar_from = scalar_from
+        self.scalar_to = scalar_to
+        self.color = color
+        self.opacity = opacity
 
+
+def isolate_region(region, opacity_func, color_func):
+    opacity_func.AddPoint(region.scalar_from - DELTA, 0.0)
+    opacity_func.AddPoint(region.scalar_from, region.opacity)
+    opacity_func.AddPoint(region.scalar_to, region.opacity)
+    opacity_func.AddPoint(region.scalar_to + DELTA, 0.0)
+
+    r, g, b = region.color
+
+    color_func.AddRGBPoint(region.scalar_from, r, g, b)
+    color_func.AddRGBPoint(region.scalar_to, r, g, b)
+
+
+def isolate_regions(region_list):
+    opacity_func = vtk.vtkPiecewiseFunction()
     color_func = vtk.vtkColorTransferFunction()
-    for color_point in [(0, r, g, b), (255, r, g, b)]:
-        color_func.AddRGBPoint(*color_point)
+    opacity_func.AddPoint(0, 0.0)
+    opacity_func.AddPoint(255, 0.0)
+    color_func.AddRGBPoint(0, 0.0, 0.0, 0.0)
+    color_func.AddRGBPoint(255, 0.0, 0.0, 0.0)
+
+    for region in region_list:
+        isolate_region(region, opacity_func, color_func)
 
     volumeProperty = vtk.vtkVolumeProperty()
     volumeProperty.SetScalarOpacity(opacity_func)
@@ -47,12 +54,11 @@ def isolate_organ(scalar_from, scalar_to, color, opacity=1.0):
 
     return volume
 
-
 renderer = vtk.vtkRenderer()
 colors = [
-    (0.929, 0.830, 0),
-    (0.971, 0.583, 0.173),
-    (0.561, 0.351, 0.008),
+    (1, 1, 0),
+    (1, 0.583, 0.173),
+    (0, 0.8, 0.8),
     (0.543, 0.886, 0.206),
     (0.307, 0.606, 0.023),
     (0.448, 0.624, 0.811),
@@ -61,15 +67,29 @@ colors = [
     (0.936, 0.159, 0.162)
 ]
 
-renderer.AddVolume(isolate_organ(64,  95,  colors[0], 0.003))  # Ligne Primitive,            JAUNE
-renderer.AddVolume(isolate_organ(96,  127, colors[1], 0.005))  # Ectoderme,                  ORANGE
-renderer.AddVolume(isolate_organ(128, 159, colors[2], 0.005))  # Appareil digestif,          BRUN
-renderer.AddVolume(isolate_organ(160, 191, colors[3], 0.005))  # Futur cerveau,              VERT CLAIR
-renderer.AddVolume(isolate_organ(192, 223, colors[4], 0.005))  # Future colonne vertébrale,  VERT FONCÉ
-renderer.AddVolume(isolate_organ(224, 224, colors[5], 0.100))  # Artère carotide gauche,     BLEU CLAIR
-renderer.AddVolume(isolate_organ(225, 225, colors[6], 0.100))  # Artère carotide droite,     BLEU FONCÉ
-renderer.AddVolume(isolate_organ(226, 226, colors[7], 0.010))  # Vésicule optique,           VIOLET
-renderer.AddVolume(isolate_organ(227, 227, colors[8], 0.005))  # Paroi externe de l'embryon, ROUGE
+ligne_primitive = Region(64, 95, colors[0], 0.003)
+ectoderme = Region(96, 127, colors[1], 0.005)
+appareil_digestif = Region(128, 159, colors[2], 0.005)
+cerveau = Region(160, 191, colors[3], 0.005)
+colonne_vertebrale = Region(192, 223, colors[5], 0.005)
+carotide_gauche = Region(224, 224, colors[4], 0.100)
+carotide_droit = Region(225, 225, colors[6], 0.100)
+vesicule_optique = Region(226, 226, colors[7], 0.010)
+paroi_externe = Region(227, 227, colors[8], 0.005)
+
+volume = isolate_regions([
+    ligne_primitive,
+    ectoderme,
+    appareil_digestif,
+    cerveau,
+    colonne_vertebrale,
+    carotide_gauche,
+    carotide_droit,
+    vesicule_optique,
+    paroi_externe
+])
+
+renderer.AddVolume(volume)
 renderer.ResetCamera()
 renderer.SetBackground(1, 1, 1)
 
