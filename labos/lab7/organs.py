@@ -1,4 +1,5 @@
 # coding=utf-8
+# Loic Serafin
 import vtk
 
 reader = vtk.vtkSLCReader()
